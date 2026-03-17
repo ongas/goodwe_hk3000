@@ -193,6 +193,9 @@ class GwhkTcpServer:
         self._client_tasks.add(task)
         try:
             await self._handle_client(device_reader, device_writer)
+        except Exception:  # pylint: disable=broad-except
+            # CancelledError is BaseException (not Exception) so it propagates naturally.
+            _LOGGER.debug("Unexpected error in client handler", exc_info=True)
         finally:
             self._client_tasks.discard(task)
 
@@ -207,8 +210,14 @@ class GwhkTcpServer:
             cloud_reader, cloud_writer = await asyncio.open_connection(
                 self._cloud_host, self._cloud_port
             )
+        except RuntimeError as exc:
+            # Raised when HA's thread-pool executor is already shut down (e.g.
+            # the device reconnected just as HA was stopping).  Close cleanly.
+            _LOGGER.debug("Cloud connection skipped during shutdown: %s", exc)
+            device_writer.close()
+            return
         except OSError:
-            _LOGGER.exception(
+            _LOGGER.warning(
                 "Cannot connect to GoodWe cloud %s:%d — data will still be parsed "
                 "but SEMS relay is inactive",
                 self._cloud_host,
