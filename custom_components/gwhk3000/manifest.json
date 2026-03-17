@@ -1,0 +1,11 @@
+{
+  "domain": "gwhk3000",
+  "name": "GWHK3000 Smart Meter",
+  "version": "0.1.0",
+  "codeowners": [],
+  "config_flow": true,
+  "documentation": "",
+  "iot_class": "local_push",
+  "loggers": ["custom_components.gwhk3000"],
+  "requirements": []
+}

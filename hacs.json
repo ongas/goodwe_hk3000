@@ -1,0 +1,5 @@
+{
+  "name": "GWHK3000 Smart Meter",
+  "render_readme": true,
+  "homeassistant": "2024.1.0"
+}
