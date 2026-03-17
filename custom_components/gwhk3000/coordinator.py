@@ -156,11 +156,12 @@ class GwhkTcpServer:
         self._cloud_host = cloud_host
         self._cloud_port = cloud_port
         self._server: asyncio.Server | None = None
+        self._client_tasks: set[asyncio.Task] = set()
 
     async def start(self) -> None:
         """Start listening for device connections."""
         self._server = await asyncio.start_server(
-            self._handle_client,
+            self._client_handler,
             self._listen_host,
             self._listen_port,
         )
@@ -173,12 +174,27 @@ class GwhkTcpServer:
         )
 
     async def stop(self) -> None:
-        """Stop the TCP server."""
+        """Stop the TCP server and cancel all active client connections."""
         if self._server:
             self._server.close()
             await self._server.wait_closed()
             self._server = None
-            _LOGGER.info("GWHK3000 TCP server stopped")
+        for task in list(self._client_tasks):
+            task.cancel()
+        if self._client_tasks:
+            await asyncio.gather(*self._client_tasks, return_exceptions=True)
+        _LOGGER.info("GWHK3000 TCP server stopped")
+
+    async def _client_handler(
+        self, device_reader: asyncio.StreamReader, device_writer: asyncio.StreamWriter
+    ) -> None:
+        """Wrap _handle_client in a tracked task so stop() can cancel it."""
+        task = asyncio.current_task()
+        self._client_tasks.add(task)
+        try:
+            await self._handle_client(device_reader, device_writer)
+        finally:
+            self._client_tasks.discard(task)
 
     async def _handle_client(
         self, device_reader: asyncio.StreamReader, device_writer: asyncio.StreamWriter
