@@ -95,6 +95,22 @@ def _decrypt_meter_payload(raw: bytes) -> dict | None:
     power_export = struct.unpack_from(">i", plaintext, _OFF_POWER_EXPORT)[0]
     power_gen = struct.unpack_from(">i", plaintext, _OFF_POWER_GEN)[0]
 
+    # DIAG: log raw int32 values at offsets 67–91 to help verify field mapping.
+    # Compare "grid_raw" with SEMS grid power and "pv_raw" with SEMS PV power.
+    _diag = {
+        f"off{o}": struct.unpack_from(">i", plaintext, o)[0] for o in range(67, 92, 4)
+    }
+    _LOGGER.info(
+        "DIAG raw power region (W): %s  | grid_raw(off75)=%d  pv_raw(off79)=%d"
+        "  energy_exp_dWh=%d  energy_gen_dWh=%d  energy_imp_dWh=%d",
+        _diag,
+        power_export,
+        power_gen,
+        energy_export,
+        energy_gen,
+        energy_import,
+    )
+
     return {
         # Decawatt-hours → kWh (1 dWh = 0.01 kWh)
         "energy_export_kwh": round(energy_export / 100.0, 2),

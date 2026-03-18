@@ -30,21 +30,12 @@ class GwhkSensorDescription(SensorEntityDescription):
 SENSORS: tuple[GwhkSensorDescription, ...] = (
     GwhkSensorDescription(
         key="grid_power",
-        data_key="power_export_w",
+        data_key="grid_power_w",
         name="Grid Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         icon="mdi:transmission-tower",
-    ),
-    GwhkSensorDescription(
-        key="pv_power",
-        data_key="power_generation_w",
-        name="PV Power",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        icon="mdi:solar-power",
     ),
     GwhkSensorDescription(
         key="energy_export_total",
