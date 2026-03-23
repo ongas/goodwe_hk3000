@@ -10,6 +10,16 @@ from collections.abc import Callable
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 _LOGGER = logging.getLogger(__name__)
+# File-based diagnostic logger (bypasses HA log filtering)
+_RELAY_LOG = "/config/hk3000_relay.log"
+def _flog(msg: str) -> None:
+    try:
+        import datetime
+        with open(_RELAY_LOG, "a") as _f:
+            _f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
+    except Exception:
+        pass
+
 
 # -- Protocol constants --------------------------------------------------------
 
