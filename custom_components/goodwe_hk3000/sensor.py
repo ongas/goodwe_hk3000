@@ -30,7 +30,7 @@ class GwhkSensorDescription(SensorEntityDescription):
 SENSORS: tuple[GwhkSensorDescription, ...] = (
     GwhkSensorDescription(
         key="grid_power",
-        data_key="grid_power_w",
+        data_key="power_export_w",
         name="Grid Power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
