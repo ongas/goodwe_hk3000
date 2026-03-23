@@ -99,7 +99,7 @@ class GwhkSensor(SensorEntity):
             identifiers={(DOMAIN, entry.entry_id)},
             name="GoodWe HK3000 Smart Meter",
             manufacturer="GoodWe",
-            model="HK1000",
+            model="HK3000",
         )
 
     @property
