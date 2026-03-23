@@ -1,6 +1,6 @@
 # HK3000 Smart Meter — Home Assistant Integration
 
-Local integration for the **GoodWe HK3000** smart meter dongle.
+Local integration for the **GoodWe HK3000** 3-Phase Smart Meter.
 
 Intercepts the proprietary **POSTGW** protocol between the device and GoodWe cloud, decrypts the AES-128-CBC payload, and exposes live meter data as Home Assistant sensor entities — with no cloud dependency for the readings.
 
