@@ -47,7 +47,8 @@ Add this repository as a custom HACS repository (type: Integration), then instal
 
 ## Supported devices
 
-- GoodWe HK3000 (serial prefix `93000HKU`)
+- **GoodWe HK3000** (serial prefix `93000HKU`) — tested and verified
+- **GoodWe HK1000** — should work, but untested
 
 ## Credits
 
