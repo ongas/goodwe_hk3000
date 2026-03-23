@@ -337,3 +337,118 @@ class GwhkTcpServer:
             if not device_writer.is_closing():
                 device_writer.write(chunk)
                 await device_writer.drain()
+
+# -- TCP client (server mode polling) ------------------------------------------
+
+
+class GwhkTcpClient:
+    """Asyncio TCP client that polls the meter periodically."""
+
+    def __init__(
+        self,
+        manager: GwhkDataManager,
+        meter_host: str,
+        meter_port: int,
+        poll_interval: int,
+    ) -> None:
+        self._manager = manager
+        self._meter_host = meter_host
+        self._meter_port = meter_port
+        self._poll_interval = poll_interval
+        self._running = False
+
+    async def start(self) -> None:
+        """Start polling the meter."""
+        self._running = True
+        _LOGGER.info(
+            "HK3000 TCP client polling %s:%d every %d seconds",
+            self._meter_host,
+            self._meter_port,
+            self._poll_interval,
+        )
+        asyncio.create_task(self._poll_loop())
+
+    async def stop(self) -> None:
+        """Stop polling the meter."""
+        self._running = False
+        _LOGGER.info("HK3000 TCP client stopped")
+
+    async def _poll_loop(self) -> None:
+        """Periodically connect to meter and read POSTGW packets."""
+        while self._running:
+            try:
+                await self._poll_once()
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.debug("Poll failed, retrying", exc_info=True)
+            
+            if self._running:
+                await asyncio.sleep(self._poll_interval)
+
+    async def _poll_once(self) -> None:
+        """Connect to meter, read one POSTGW packet, and update sensors."""
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection(self._meter_host, self._meter_port),
+                timeout=10
+            )
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout connecting to meter %s:%d",
+                self._meter_host,
+                self._meter_port,
+            )
+            return
+        except OSError as exc:
+            _LOGGER.warning(
+                "Cannot connect to meter %s:%d: %s",
+                self._meter_host,
+                self._meter_port,
+                exc,
+            )
+            return
+
+        try:
+            buf = bytearray()
+            while True:
+                chunk = await asyncio.wait_for(reader.read(4096), timeout=5)
+                if not chunk:
+                    break
+                buf.extend(chunk)
+
+                # Find and process POSTGW packets
+                offset = 0
+                while True:
+                    idx = buf.find(POSTGW_MAGIC, offset)
+                    if idx == -1:
+                        buf = buf[max(0, len(buf) - (len(POSTGW_MAGIC) - 1)) :]
+                        offset = 0
+                        break
+
+                    size = _total_packet_size(buf, idx)
+                    if size is None:
+                        buf = buf[idx:]
+                        offset = 0
+                        break
+
+                    if idx + size > len(buf):
+                        buf = buf[idx:]
+                        offset = 0
+                        break
+
+                    packet = bytes(buf[idx : idx + size])
+                    _LOGGER.debug("Meter→HA packet: %d bytes", len(packet))
+
+                    # Parse meter readings
+                    values = _decrypt_meter_payload(packet)
+                    if values:
+                        _LOGGER.debug("Meter readings: %s", values)
+                        self._manager.update(values)
+                        _flog(f"POLL_RECEIVED: {len(packet)} bytes  values={values}")
+                        # After receiving one good packet, stop and reconnect next cycle
+                        return
+
+                    offset = idx + size
+
+        finally:
+            writer.close()
+            await writer.wait_closed()
