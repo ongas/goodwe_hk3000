@@ -31,10 +31,12 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HK3000 from a config entry."""
+    _LOGGER.info("HK3000 setup_entry called for entry %s", entry.entry_id)
     hass.data.setdefault(DOMAIN, {})
 
     manager = GwhkDataManager()
     mode = entry.data.get(CONF_MODE, MODE_CLIENT)
+    _LOGGER.info("HK3000 mode=%s", mode)
 
     if mode == MODE_CLIENT:
         return await _setup_client_mode(hass, entry, manager)
