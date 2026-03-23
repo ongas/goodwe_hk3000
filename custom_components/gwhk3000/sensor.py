@@ -97,7 +97,7 @@ class GwhkSensor(SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="GWHK3000 Smart Meter",
+            name="GoodWe HK3000 Smart Meter",
             manufacturer="GoodWe",
             model="HK1000",
         )

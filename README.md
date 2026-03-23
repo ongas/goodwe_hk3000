@@ -1,4 +1,4 @@
-# HK3000 Smart Meter — Home Assistant Integration
+# GoodWe HK3000 Smart Meter — Home Assistant Integration
 
 Local integration for the **GoodWe HK3000** 3-Phase Smart Meter.
 
@@ -34,11 +34,11 @@ Copy the `custom_components/gwhk3000` folder into your HA `config/custom_compone
 
 ### HACS
 
-Add this repository as a custom HACS repository (type: Integration), then install **HK3000 Smart Meter**.
+Add this repository as a custom HACS repository (type: Integration), then install **GoodWe HK3000 Smart Meter**.
 
 ## Configuration
 
-1. In HA go to **Settings → Devices & Services → Add Integration → HK3000 Smart Meter**
+1. In HA go to **Settings → Devices & Services → Add Integration → GoodWe HK3000 Smart Meter**
 2. Set:
    - **Listen Port**: port this HA instance will listen on (default `20001`)
    - **GoodWe Cloud Host**: `tcp.goodwe-power.com` (default)
