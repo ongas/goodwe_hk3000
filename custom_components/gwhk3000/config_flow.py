@@ -41,7 +41,7 @@ STEP_USER_SCHEMA = vol.Schema(
 
 
 class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for GWHK3000."""
+    """Handle a config flow for HK3000."""
 
     VERSION = 1
 
@@ -49,7 +49,7 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial configuration step."""
         if user_input is not None:
             return self.async_create_entry(
-                title=f"GWHK3000 (port {int(user_input[CONF_LISTEN_PORT])})",
+                title=f"HK3000 (port {int(user_input[CONF_LISTEN_PORT])})",
                 data={
                     CONF_LISTEN_PORT: int(user_input[CONF_LISTEN_PORT]),
                     CONF_CLOUD_HOST: user_input[CONF_CLOUD_HOST],

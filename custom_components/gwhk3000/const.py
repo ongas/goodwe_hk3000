@@ -1,4 +1,4 @@
-"""Constants for the GWHK3000 integration."""
+"""Constants for the HK3000 integration."""
 
 DOMAIN = "gwhk3000"
 

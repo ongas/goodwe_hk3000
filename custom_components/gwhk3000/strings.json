@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "GWHK3000 Smart Meter",
+        "title": "HK3000 Smart Meter",
         "description": "Configure the local POSTGW proxy. The device must be pointed at this host on the listen port.",
         "data": {
           "listen_port": "Listen Port",

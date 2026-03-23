@@ -1,4 +1,4 @@
-"""The GWHK3000 integration."""
+"""The HK3000 integration."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up GWHK3000 from a config entry."""
+    """Set up HK3000 from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
     manager = GwhkDataManager()

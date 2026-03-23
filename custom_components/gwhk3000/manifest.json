@@ -1,6 +1,6 @@
 {
   "domain": "gwhk3000",
-  "name": "GWHK3000 Smart Meter",
+  "name": "HK3000 Smart Meter",
   "version": "0.1.0",
   "codeowners": ["@ongas"],
   "config_flow": true,
