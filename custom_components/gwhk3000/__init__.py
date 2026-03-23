@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await server.start()
     except OSError:
-        _LOGGER.exception("Failed to start GWHK3000 TCP server on port %d", listen_port)
+        _LOGGER.exception("Failed to start HK3000 TCP server on port %d", listen_port)
         return False
 
     hass.data[DOMAIN][entry.entry_id] = manager
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a GWHK3000 config entry."""
+    """Unload a HK3000 config entry."""
     server: GwhkTcpServer = hass.data[DOMAIN].pop(f"{entry.entry_id}_server", None)
     if server:
         await server.stop()

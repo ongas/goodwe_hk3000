@@ -1,4 +1,4 @@
-"""GWHK3000 data coordinator: TCP server, POSTGW relay and meter packet parser."""
+"""HK3000 data coordinator: TCP server, POSTGW relay and meter packet parser."""
 
 from __future__ import annotations
 
@@ -182,7 +182,7 @@ class GwhkTcpServer:
             self._listen_port,
         )
         _LOGGER.info(
-            "GWHK3000 TCP server listening on %s:%d (relay → %s:%d)",
+            "HK3000 TCP server listening on %s:%d (relay → %s:%d)",
             self._listen_host,
             self._listen_port,
             self._cloud_host,
@@ -199,7 +199,7 @@ class GwhkTcpServer:
             task.cancel()
         if self._client_tasks:
             await asyncio.gather(*self._client_tasks, return_exceptions=True)
-        _LOGGER.info("GWHK3000 TCP server stopped")
+        _LOGGER.info("HK3000 TCP server stopped")
 
     async def _client_handler(
         self, device_reader: asyncio.StreamReader, device_writer: asyncio.StreamWriter
@@ -219,7 +219,7 @@ class GwhkTcpServer:
         self, device_reader: asyncio.StreamReader, device_writer: asyncio.StreamWriter
     ) -> None:
         peer = device_writer.get_extra_info("peername")
-        _LOGGER.info("GWHK3000 device connected from %s", peer)
+        _LOGGER.info("HK3000 device connected from %s", peer)
 
         # Open relay connection to GoodWe cloud
         try:
@@ -252,7 +252,7 @@ class GwhkTcpServer:
             device_writer.close()
             if cloud_writer:
                 cloud_writer.close()
-            _LOGGER.info("GWHK3000 device disconnected: %s", peer)
+            _LOGGER.info("HK3000 device disconnected: %s", peer)
 
     async def _device_to_cloud(
         self,

@@ -1,4 +1,4 @@
-"""Config flow for the GWHK3000 integration."""
+"""Config flow for the HK3000 integration."""
 
 from __future__ import annotations
 
