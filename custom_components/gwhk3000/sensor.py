@@ -1,4 +1,4 @@
-"""Sensor platform for the GWHK3000 integration."""
+"""Sensor platform for the HK3000 integration."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from .coordinator import GwhkDataManager
 
 @dataclass(frozen=True, kw_only=True)
 class GwhkSensorDescription(SensorEntityDescription):
-    """Describes a GWHK3000 sensor."""
+    """Describes a HK3000 sensor."""
 
     data_key: str
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up GWHK3000 sensors from a config entry."""
+    """Set up HK3000 sensors from a config entry."""
     manager: GwhkDataManager = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         GwhkSensor(manager, description, entry) for description in SENSORS
@@ -80,7 +80,7 @@ async def async_setup_entry(
 
 
 class GwhkSensor(SensorEntity):
-    """Represents a single GWHK3000 meter sensor."""
+    """Represents a single HK3000 meter sensor."""
 
     entity_description: GwhkSensorDescription
     _attr_should_poll = False
