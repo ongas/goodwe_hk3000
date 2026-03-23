@@ -2,9 +2,9 @@
   "domain": "gwhk3000",
   "name": "GWHK3000 Smart Meter",
   "version": "0.1.0",
-  "codeowners": [],
+  "codeowners": ["@ongas"],
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://github.com/ongas/goodwe_hk3000/blob/main/README.md",
   "iot_class": "local_push",
   "loggers": ["custom_components.gwhk3000"],
   "requirements": []
