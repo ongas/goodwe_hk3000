@@ -10,15 +10,6 @@ from collections.abc import Callable
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 _LOGGER = logging.getLogger(__name__)
-# File-based diagnostic logger (bypasses HA log filtering)
-_RELAY_LOG = "/config/hk3000_relay.log"
-def _flog(msg: str) -> None:
-    try:
-        import datetime
-        with open(_RELAY_LOG, "a") as _f:
-            _f.write(f"{datetime.datetime.now().isoformat()} {msg}\n")
-    except Exception:
-        pass
 
 
 # -- Protocol constants --------------------------------------------------------
@@ -443,7 +434,7 @@ class GwhkTcpClient:
                     if values:
                         _LOGGER.debug("Meter readings: %s", values)
                         self._manager.update(values)
-                        _flog(f"POLL_RECEIVED: {len(packet)} bytes  values={values}")
+                        _LOGGER.info("POLL_RECEIVED: %d bytes  values=%s", len(packet), values)
                         # After receiving one good packet, stop and reconnect next cycle
                         return
 
