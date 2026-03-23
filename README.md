@@ -30,7 +30,7 @@ The HK3000 speaks GoodWe's binary POSTGW protocol over TCP. This integration:
 
 ### Manual
 
-Copy the `custom_components/gwhk3000` folder into your HA `config/custom_components/` directory and restart Home Assistant.
+Copy the `custom_components/goodwe_hk3000` folder into your HA `config/custom_components/` directory and restart Home Assistant.
 
 ### HACS
 

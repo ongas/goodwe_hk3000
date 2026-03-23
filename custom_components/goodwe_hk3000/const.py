@@ -1,6 +1,6 @@
 """Constants for the HK3000 integration."""
 
-DOMAIN = "gwhk3000"
+DOMAIN = "goodwe_hk3000"
 
 CONF_LISTEN_PORT = "listen_port"
 CONF_CLOUD_HOST = "cloud_host"
