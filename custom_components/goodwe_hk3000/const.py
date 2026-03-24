@@ -2,22 +2,18 @@
 
 DOMAIN = "goodwe_hk3000"
 
-CONF_MODE = "mode"
-CONF_LISTEN_PORT = "listen_port"
+CONF_METER_HOST = "meter_host"
+CONF_METER_PORT = "meter_port"
+CONF_CLOUD_RELAY = "cloud_relay"
+CONF_CLOUD_USERNAME = "cloud_username"
+CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_HOST = "cloud_host"
 CONF_CLOUD_PORT = "cloud_port"
-CONF_METER_HOST = "meter_host"
-CONF_POLL_INTERVAL = "poll_interval"
 
-MODE_CLIENT = "client"
-MODE_SERVER = "server"
-
-DEFAULT_MODE = MODE_CLIENT
-DEFAULT_LISTEN_PORT = 20001
 DEFAULT_CLOUD_HOST = "tcp.goodwe-power.com"
 DEFAULT_CLOUD_PORT = 20001
 DEFAULT_METER_HOST = ""  # User must provide their meter IP
-DEFAULT_POLL_INTERVAL = 15
+DEFAULT_METER_PORT = 20001  # HF-A21 server mode default port
 
 # Sensor data keys
 KEY_POWER_EXPORT_W = "power_export_w"

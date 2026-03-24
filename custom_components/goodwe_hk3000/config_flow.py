@@ -9,45 +9,40 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_CLOUD_HOST,
+    CONF_CLOUD_PASSWORD,
     CONF_CLOUD_PORT,
-    CONF_LISTEN_PORT,
+    CONF_CLOUD_RELAY,
+    CONF_CLOUD_USERNAME,
     CONF_METER_HOST,
-    CONF_MODE,
-    CONF_POLL_INTERVAL,
+    CONF_METER_PORT,
     DEFAULT_CLOUD_HOST,
     DEFAULT_CLOUD_PORT,
-    DEFAULT_LISTEN_PORT,
     DEFAULT_METER_HOST,
-    DEFAULT_MODE,
-    DEFAULT_POLL_INTERVAL,
+    DEFAULT_METER_PORT,
     DOMAIN,
-    MODE_CLIENT,
-    MODE_SERVER,
 )
 
-STEP_MODE_SCHEMA = vol.Schema(
+STEP_SERVER_SCHEMA = vol.Schema(
     {
         vol.Required(
-            CONF_MODE, default=DEFAULT_MODE
-        ): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[
-                    selector.SelectOptionDict(value=MODE_CLIENT, label="Client Mode (meter pushes data)"),
-                    selector.SelectOptionDict(value=MODE_SERVER, label="Server Mode (HA polls meter)"),
-                ]
-            )
-        ),
-    }
-)
-
-STEP_CLIENT_SCHEMA = vol.Schema(
-    {
+            CONF_METER_HOST, default=DEFAULT_METER_HOST
+        ): selector.TextSelector(),
         vol.Required(
-            CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT
+            CONF_METER_PORT, default=DEFAULT_METER_PORT
         ): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=1, max=65535, mode=selector.NumberSelectorMode.BOX
             )
+        ),
+        vol.Required(CONF_CLOUD_RELAY, default=False): selector.BooleanSelector(),
+    }
+)
+
+STEP_CLOUD_CREDENTIALS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CLOUD_USERNAME): selector.TextSelector(),
+        vol.Required(CONF_CLOUD_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         vol.Required(
             CONF_CLOUD_HOST, default=DEFAULT_CLOUD_HOST
@@ -62,63 +57,62 @@ STEP_CLIENT_SCHEMA = vol.Schema(
     }
 )
 
-STEP_SERVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_METER_HOST, default=DEFAULT_METER_HOST
-        ): selector.TextSelector(),
-        vol.Required(
-            CONF_POLL_INTERVAL, default=DEFAULT_POLL_INTERVAL
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=5, max=300, mode=selector.NumberSelectorMode.BOX
-            )
-        ),
-    }
-)
-
 
 class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HK3000."""
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialise the config flow."""
+        self._server_data: dict = {}
+
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
-        """Handle mode selection step."""
-        if user_input is not None:
-            mode = user_input[CONF_MODE]
-            if mode == MODE_CLIENT:
-                return await self.async_step_client()
-            else:
-                return await self.async_step_server()
-
-        return self.async_show_form(step_id="user", data_schema=STEP_MODE_SCHEMA)
-
-    async def async_step_client(self, user_input: dict | None = None) -> FlowResult:
-        """Handle client mode configuration."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=f"HK3000 (client port {int(user_input[CONF_LISTEN_PORT])})",
-                data={
-                    CONF_MODE: MODE_CLIENT,
-                    CONF_LISTEN_PORT: int(user_input[CONF_LISTEN_PORT]),
-                    CONF_CLOUD_HOST: user_input[CONF_CLOUD_HOST],
-                    CONF_CLOUD_PORT: int(user_input[CONF_CLOUD_PORT]),
-                },
-            )
-
-        return self.async_show_form(step_id="client", data_schema=STEP_CLIENT_SCHEMA)
+        """Start directly with server mode configuration."""
+        return await self.async_step_server(user_input)
 
     async def async_step_server(self, user_input: dict | None = None) -> FlowResult:
-        """Handle server mode configuration."""
+        """Handle server mode configuration — meter IP, port, and relay toggle."""
         if user_input is not None:
+            self._server_data = {
+                CONF_METER_HOST: user_input[CONF_METER_HOST],
+                CONF_METER_PORT: int(user_input[CONF_METER_PORT]),
+                CONF_CLOUD_RELAY: user_input[CONF_CLOUD_RELAY],
+            }
+            if user_input[CONF_CLOUD_RELAY]:
+                return await self.async_step_cloud_credentials()
             return self.async_create_entry(
-                title=f"HK3000 (server {user_input[CONF_METER_HOST]})",
-                data={
-                    CONF_MODE: MODE_SERVER,
-                    CONF_METER_HOST: user_input[CONF_METER_HOST],
-                    CONF_POLL_INTERVAL: int(user_input[CONF_POLL_INTERVAL]),
-                },
+                title=f"HK3000 @ {user_input[CONF_METER_HOST]}",
+                data=self._server_data,
             )
 
-        return self.async_show_form(step_id="server", data_schema=STEP_SERVER_SCHEMA)
+        meter_host = self._server_data.get(CONF_METER_HOST, DEFAULT_METER_HOST)
+        meter_url = f"http://{meter_host}" if meter_host else "http://<meter-ip>"
+        return self.async_show_form(
+            step_id="server",
+            data_schema=STEP_SERVER_SCHEMA,
+            description_placeholders={"meter_url": meter_url},
+        )
+
+    async def async_step_cloud_credentials(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Handle GoodWe cloud credentials when relay is enabled."""
+        if user_input is not None:
+            self._server_data.update(
+                {
+                    CONF_CLOUD_USERNAME: user_input[CONF_CLOUD_USERNAME],
+                    CONF_CLOUD_PASSWORD: user_input[CONF_CLOUD_PASSWORD],
+                    CONF_CLOUD_HOST: user_input[CONF_CLOUD_HOST],
+                    CONF_CLOUD_PORT: int(user_input[CONF_CLOUD_PORT]),
+                }
+            )
+            return self.async_create_entry(
+                title=f"HK3000 @ {self._server_data[CONF_METER_HOST]}",
+                data=self._server_data,
+            )
+
+        return self.async_show_form(
+            step_id="cloud_credentials",
+            data_schema=STEP_CLOUD_CREDENTIALS_SCHEMA,
+        )
