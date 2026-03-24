@@ -7,7 +7,8 @@
         "data": {
           "meter_host": "Meter IP Address",
           "meter_port": "Meter Port",
-          "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)"
+          "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)",
+          "update_interval": "Data Update Interval (seconds)"
         }
       },
       "cloud_credentials": {
