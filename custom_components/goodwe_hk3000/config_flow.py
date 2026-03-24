@@ -15,12 +15,10 @@ from .const import (
     CONF_CLOUD_USERNAME,
     CONF_METER_HOST,
     CONF_METER_PORT,
-    CONF_UPDATE_INTERVAL,
     DEFAULT_CLOUD_HOST,
     DEFAULT_CLOUD_PORT,
     DEFAULT_METER_HOST,
     DEFAULT_METER_PORT,
-    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
 
@@ -37,16 +35,6 @@ STEP_SERVER_SCHEMA = vol.Schema(
             )
         ),
         vol.Required(CONF_CLOUD_RELAY, default=False): selector.BooleanSelector(),
-        vol.Required(
-            CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL
-        ): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=5,
-                max=3600,
-                mode=selector.NumberSelectorMode.BOX,
-                unit_of_measurement="s",
-            )
-        ),
     }
 )
 
@@ -84,13 +72,12 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_server(user_input)
 
     async def async_step_server(self, user_input: dict | None = None) -> FlowResult:
-        """Handle server mode configuration — meter IP, port, relay toggle, and update interval."""
+        """Handle server mode configuration — meter IP, port, and cloud relay."""
         if user_input is not None:
             self._server_data = {
                 CONF_METER_HOST: user_input[CONF_METER_HOST],
                 CONF_METER_PORT: int(user_input[CONF_METER_PORT]),
                 CONF_CLOUD_RELAY: user_input[CONF_CLOUD_RELAY],
-                CONF_UPDATE_INTERVAL: int(user_input[CONF_UPDATE_INTERVAL]),
             }
             if user_input[CONF_CLOUD_RELAY]:
                 return await self.async_step_cloud_credentials()
