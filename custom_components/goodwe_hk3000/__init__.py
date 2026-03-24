@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_CLOUD_HOST,
@@ -18,11 +16,9 @@ from .const import (
     CONF_CLOUD_USERNAME,
     CONF_METER_HOST,
     CONF_METER_PORT,
-    CONF_UPDATE_INTERVAL,
     DEFAULT_CLOUD_HOST,
     DEFAULT_CLOUD_PORT,
     DEFAULT_METER_PORT,
-    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
 from .coordinator import GwhkDataManager, GwhkTcpClient
@@ -50,14 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud_port = entry.data.get(CONF_CLOUD_PORT, DEFAULT_CLOUD_PORT)
     cloud_username = entry.data.get(CONF_CLOUD_USERNAME, "")
     cloud_password = entry.data.get(CONF_CLOUD_PASSWORD, "")
-    update_interval = entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
     _LOGGER.info(
-        "HK3000 server-mode: meter=%s:%d  cloud_relay=%s  update_interval=%ds",
+        "HK3000 server-mode: meter=%s:%d  cloud_relay=%s",
         meter_host,
         meter_port,
         cloud_relay,
-        update_interval,
     )
 
     client = GwhkTcpClient(
@@ -77,18 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.exception("Failed to start HK3000 client")
         return False
 
-    # Create coordinator with configurable update interval
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=manager.async_refresh,
-        update_interval=timedelta(seconds=update_interval),
-    )
-
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = manager
     hass.data[DOMAIN][f"{entry.entry_id}_client"] = client
-    hass.data[DOMAIN][f"{entry.entry_id}_manager"] = manager
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
