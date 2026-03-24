@@ -105,6 +105,32 @@ If no readings appear after 1 minute:
 - Cloud relay should continue to work automatically
 - If relay fails, disable and re-enable **Cloud Relay** in HA setup
 
+## Development
+
+### Testing
+
+Run the unit test suite to verify changes:
+
+```bash
+python3 -m pytest tests/ -v
+```
+
+Tests cover:
+- Config flow schema validation
+- Packet parsing and decryption
+- Data manager callbacks
+- Integration setup
+- Regression prevention (e.g., missing constants, dead code detection)
+
+### Code Structure
+
+- `coordinator.py` — POSTGW listener, packet parser, data manager
+- `config_flow.py` — Home Assistant setup flow
+- `sensor.py` — Sensor entity definitions
+- `const.py` — Constants and configuration keys
+- `__init__.py` — Integration setup/teardown
+- `tests/` — Comprehensive unit test suite
+
 ## Credits
 
 Protocol reverse engineering, packet structure analysis, and testing based on:
