@@ -153,6 +153,15 @@ class GwhkDataManager:
         for callback in list(self._listeners):
             callback()
 
+    async def async_refresh(self) -> None:
+        """Async refresh method for DataUpdateCoordinator.
+
+        Since we receive updates from the meter passively, this is a no-op
+        but it allows the coordinator to enforce its update_interval.
+        """
+        # Data is already updated by the TCP client via update() callback
+        pass
+
 
 # -- TCP relay + packet handler ------------------------------------------------
 
