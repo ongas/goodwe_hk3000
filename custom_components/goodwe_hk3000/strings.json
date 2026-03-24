@@ -7,14 +7,12 @@
         "data": {
           "meter_host": "Meter IP Address",
           "meter_port": "Meter Port",
-          "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)",
-          "update_interval": "Data Update Interval (seconds)"
+          "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)"
         },
         "data_description": {
           "meter_host": "Example: 192.168.0.200",
           "meter_port": "Default: 20001",
-          "cloud_relay": "Forwards raw POSTGW packets to GoodWe cloud every 60 seconds",
-          "update_interval": "How often HA refreshes sensor states (5-3600 seconds, default 20)"
+          "cloud_relay": "Forwards raw POSTGW packets to GoodWe cloud every 60 seconds"
         }
       },
       "cloud_credentials": {

@@ -12,13 +12,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
 
 from .const import DOMAIN
 from .coordinator import GwhkDataManager
@@ -77,14 +73,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up HK3000 sensors from a config entry."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    manager: GwhkDataManager = hass.data[DOMAIN][f"{entry.entry_id}_manager"]
+    manager: GwhkDataManager = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        GwhkSensor(coordinator, manager, description, entry) for description in SENSORS
+        GwhkSensor(manager, description, entry) for description in SENSORS
     )
 
 
-class GwhkSensor(CoordinatorEntity, SensorEntity):
+class GwhkSensor(SensorEntity):
     """Represents a single HK3000 meter sensor."""
 
     entity_description: GwhkSensorDescription
@@ -93,12 +88,10 @@ class GwhkSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
         manager: GwhkDataManager,
         description: GwhkSensorDescription,
         entry: ConfigEntry,
     ) -> None:
-        super().__init__(coordinator)
         self.entity_description = description
         self._manager = manager
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
@@ -114,16 +107,15 @@ class GwhkSensor(CoordinatorEntity, SensorEntity):
         """Return the current sensor value."""
         return self._manager.data.get(self.entity_description.data_key)
 
+    @callback
+    def _handle_update(self) -> None:
+        """Handle new data from the manager."""
+        self.async_write_ha_state()
+
     async def async_added_to_hass(self) -> None:
         """Register for manager updates when entity is added."""
-        await super().async_added_to_hass()
         self._manager.register_listener(self._handle_update)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister when entity is removed."""
-        await super().async_will_remove_from_hass()
         self._manager.unregister_listener(self._handle_update)
-
-    def _handle_update(self) -> None:
-        """Handle new data from the manager."""
-        self.async_write_ha_state()
