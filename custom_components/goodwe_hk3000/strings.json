@@ -3,12 +3,18 @@
     "step": {
       "server": {
         "title": "GoodWe HK3000 Smart Meter",
-        "description": "Enter your meter's IP address below.\n\nOpen **[{meter_url}]({meter_url})** in a new tab to access the meter's web UI and set **Mode → Server** before saving.",
+        "description": "Configure your smart meter connection.\n\n**Before saving:**\n1. Enter your meter's IP address below\n2. Open the meter's web UI in a new tab: **http://<your-meter-ip>**\n3. Navigate to **Mode → Server** and save the changes\n4. Return here and save the configuration\n\nThe meter will then push real-time data to Home Assistant.",
         "data": {
           "meter_host": "Meter IP Address",
           "meter_port": "Meter Port",
           "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)",
           "update_interval": "Data Update Interval (seconds)"
+        },
+        "data_description": {
+          "meter_host": "Example: 192.168.0.200",
+          "meter_port": "Default: 20001",
+          "cloud_relay": "Forwards raw POSTGW packets to GoodWe cloud every 60 seconds",
+          "update_interval": "How often HA refreshes sensor states (5-3600 seconds, default 20)"
         }
       },
       "cloud_credentials": {
