@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, FlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -57,6 +58,12 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow handler."""
+        return GwhkOptionsFlowHandler(config_entry)
+
     def __init__(self) -> None:
         """Initialise the config flow."""
         self._server_data: dict = {}
@@ -105,3 +112,81 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="cloud_settings",
             data_schema=STEP_CLOUD_SETTINGS_SCHEMA,
         )
+
+
+class GwhkOptionsFlowHandler(OptionsFlow):
+    """Handle HK3000 options — allows changing relay settings without re-adding."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialise the options flow."""
+        self._entry = config_entry
+        self._options: dict = {}
+
+    async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
+        """Show current settings for editing."""
+        current = {**self._entry.data, **self._entry.options}
+
+        if user_input is not None:
+            self._options = {
+                CONF_METER_HOST: user_input[CONF_METER_HOST],
+                CONF_METER_PORT: int(user_input[CONF_METER_PORT]),
+                CONF_CLOUD_RELAY: user_input[CONF_CLOUD_RELAY],
+            }
+            if user_input[CONF_CLOUD_RELAY]:
+                return await self.async_step_cloud_settings()
+            return self.async_create_entry(title="", data=self._options)
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_METER_HOST,
+                    default=current.get(CONF_METER_HOST, DEFAULT_METER_HOST),
+                ): selector.TextSelector(),
+                vol.Required(
+                    CONF_METER_PORT,
+                    default=current.get(CONF_METER_PORT, DEFAULT_METER_PORT),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+                    )
+                ),
+                vol.Required(
+                    CONF_CLOUD_RELAY,
+                    default=current.get(CONF_CLOUD_RELAY, False),
+                ): selector.BooleanSelector(),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)
+
+    async def async_step_cloud_settings(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Handle cloud relay settings when relay is enabled."""
+        current = {**self._entry.data, **self._entry.options}
+
+        if user_input is not None:
+            self._options.update(
+                {
+                    CONF_CLOUD_HOST: user_input[CONF_CLOUD_HOST],
+                    CONF_CLOUD_PORT: int(user_input[CONF_CLOUD_PORT]),
+                }
+            )
+            return self.async_create_entry(title="", data=self._options)
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_CLOUD_HOST,
+                    default=current.get(CONF_CLOUD_HOST, DEFAULT_CLOUD_HOST),
+                ): selector.TextSelector(),
+                vol.Required(
+                    CONF_CLOUD_PORT,
+                    default=current.get(CONF_CLOUD_PORT, DEFAULT_CLOUD_PORT),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1, max=65535, mode=selector.NumberSelectorMode.BOX
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(step_id="cloud_settings", data_schema=schema)

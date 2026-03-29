@@ -7,6 +7,7 @@ import logging
 import struct
 import time
 from collections.abc import Callable
+from datetime import datetime, timezone
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
@@ -22,6 +23,10 @@ class GwhkDataManager:
     def __init__(self) -> None:
         self._data: dict = {}
         self._listeners: list[Callable[[], None]] = []
+        self.last_packet_time: datetime | None = None
+        self.packet_count_today: int = 0
+        self._packet_count_date: str = ""
+        self.connected: bool = False
 
     @property
     def data(self) -> dict:
@@ -37,8 +42,20 @@ class GwhkDataManager:
         self._listeners.remove(callback)
 
     def update(self, values: dict) -> None:
-        """Update stored readings and notify all registered listeners."""
+        """Update stored readings, increment packet counter, and notify listeners."""
         self._data = values
+        self.last_packet_time = datetime.now(timezone.utc)
+        today = self.last_packet_time.strftime("%Y-%m-%d")
+        if today != self._packet_count_date:
+            self.packet_count_today = 0
+            self._packet_count_date = today
+        self.packet_count_today += 1
+        for callback in list(self._listeners):
+            callback()
+
+    def set_connected(self, connected: bool) -> None:
+        """Update connection state and notify listeners."""
+        self.connected = connected
         for callback in list(self._listeners):
             callback()
 
@@ -210,6 +227,7 @@ class GwhkTcpClient:
             self._meter_host,
             self._meter_port,
         )
+        self._manager.set_connected(True)
         buf = b""
         try:
             while self._running:
@@ -259,6 +277,7 @@ class GwhkTcpClient:
         finally:
             writer.close()
             await writer.wait_closed()
+            self._manager.set_connected(False)
 
     async def _maybe_relay_to_cloud(self, pkt: bytes) -> None:
         """Forward a raw POSTGW packet to the GoodWe cloud at most once per 60 s."""
