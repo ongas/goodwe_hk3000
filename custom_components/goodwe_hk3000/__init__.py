@@ -33,15 +33,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     manager = GwhkDataManager()
 
-    meter_host = entry.data.get(CONF_METER_HOST)
+    cfg = {**entry.data, **entry.options}
+    meter_host = cfg.get(CONF_METER_HOST)
     if not meter_host:
         _LOGGER.error("Meter host not configured")
         return False
 
-    meter_port = entry.data.get(CONF_METER_PORT, DEFAULT_METER_PORT)
-    cloud_relay = entry.data.get(CONF_CLOUD_RELAY, False)
-    cloud_host = entry.data.get(CONF_CLOUD_HOST, DEFAULT_CLOUD_HOST)
-    cloud_port = entry.data.get(CONF_CLOUD_PORT, DEFAULT_CLOUD_PORT)
+    meter_port = cfg.get(CONF_METER_PORT, DEFAULT_METER_PORT)
+    cloud_relay = cfg.get(CONF_CLOUD_RELAY, False)
+    cloud_host = cfg.get(CONF_CLOUD_HOST, DEFAULT_CLOUD_HOST)
+    cloud_port = cfg.get(CONF_CLOUD_PORT, DEFAULT_CLOUD_PORT)
     _LOGGER.info(
         "HK3000 server-mode: meter=%s:%d  cloud_relay=%s",
         meter_host,
@@ -68,7 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][f"{entry.entry_id}_client"] = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

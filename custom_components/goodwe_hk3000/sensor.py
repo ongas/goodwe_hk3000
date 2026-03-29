@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -74,9 +75,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up HK3000 sensors from a config entry."""
     manager: GwhkDataManager = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        GwhkSensor(manager, description, entry) for description in SENSORS
-    )
+    meter_sensors = [GwhkSensor(manager, description, entry) for description in SENSORS]
+    status_sensors = [
+        GwhkConnectionStatusSensor(manager, entry),
+        GwhkLastUpdateSensor(manager, entry),
+        GwhkPacketCountSensor(manager, entry),
+    ]
+    async_add_entities(meter_sensors + status_sensors)
 
 
 class GwhkSensor(SensorEntity):
@@ -118,4 +123,101 @@ class GwhkSensor(SensorEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister when entity is removed."""
+        self._manager.unregister_listener(self._handle_update)
+
+
+def _device_info(entry: ConfigEntry) -> DeviceInfo:
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="GoodWe HK3000 Smart Meter",
+        manufacturer="GoodWe",
+        model="HK3000",
+    )
+
+
+class GwhkConnectionStatusSensor(SensorEntity):
+    """Reports whether the integration is connected to the meter."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Connection Status"
+    _attr_should_poll = False
+
+    def __init__(self, manager: GwhkDataManager, entry: ConfigEntry) -> None:
+        self._manager = manager
+        self._attr_unique_id = f"{entry.entry_id}_connection_status"
+        self._attr_device_info = _device_info(entry)
+
+    @property
+    def native_value(self) -> str:
+        return "Connected" if self._manager.connected else "Disconnected"
+
+    @property
+    def icon(self) -> str:
+        return "mdi:lan-connect" if self._manager.connected else "mdi:lan-disconnect"
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        self._manager.register_listener(self._handle_update)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._manager.unregister_listener(self._handle_update)
+
+
+class GwhkLastUpdateSensor(SensorEntity):
+    """Reports the timestamp of the last received meter packet."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Last Update"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_should_poll = False
+
+    def __init__(self, manager: GwhkDataManager, entry: ConfigEntry) -> None:
+        self._manager = manager
+        self._attr_unique_id = f"{entry.entry_id}_last_update"
+        self._attr_device_info = _device_info(entry)
+
+    @property
+    def native_value(self) -> datetime | None:
+        return self._manager.last_packet_time
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        self._manager.register_listener(self._handle_update)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._manager.unregister_listener(self._handle_update)
+
+
+class GwhkPacketCountSensor(SensorEntity):
+    """Reports the number of meter packets received today."""
+
+    _attr_has_entity_name = True
+    _attr_name = "Packets Today"
+    _attr_icon = "mdi:counter"
+    _attr_native_unit_of_measurement = "packets"
+    _attr_should_poll = False
+
+    def __init__(self, manager: GwhkDataManager, entry: ConfigEntry) -> None:
+        self._manager = manager
+        self._attr_unique_id = f"{entry.entry_id}_packets_today"
+        self._attr_device_info = _device_info(entry)
+
+    @property
+    def native_value(self) -> int:
+        return self._manager.packet_count_today
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        self._manager.register_listener(self._handle_update)
+
+    async def async_will_remove_from_hass(self) -> None:
         self._manager.unregister_listener(self._handle_update)
