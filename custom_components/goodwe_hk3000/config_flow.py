@@ -9,10 +9,8 @@ from homeassistant.helpers import selector
 
 from .const import (
     CONF_CLOUD_HOST,
-    CONF_CLOUD_PASSWORD,
     CONF_CLOUD_PORT,
     CONF_CLOUD_RELAY,
-    CONF_CLOUD_USERNAME,
     CONF_METER_HOST,
     CONF_METER_PORT,
     DEFAULT_CLOUD_HOST,
@@ -38,12 +36,8 @@ STEP_SERVER_SCHEMA = vol.Schema(
     }
 )
 
-STEP_CLOUD_CREDENTIALS_SCHEMA = vol.Schema(
+STEP_CLOUD_SETTINGS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CLOUD_USERNAME): selector.TextSelector(),
-        vol.Required(CONF_CLOUD_PASSWORD): selector.TextSelector(
-            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-        ),
         vol.Required(
             CONF_CLOUD_HOST, default=DEFAULT_CLOUD_HOST
         ): selector.TextSelector(),
@@ -80,7 +74,7 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_CLOUD_RELAY: user_input[CONF_CLOUD_RELAY],
             }
             if user_input[CONF_CLOUD_RELAY]:
-                return await self.async_step_cloud_credentials()
+                return await self.async_step_cloud_settings()
             return self.async_create_entry(
                 title=f"HK3000 @ {user_input[CONF_METER_HOST]}",
                 data=self._server_data,
@@ -91,15 +85,13 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_SERVER_SCHEMA,
         )
 
-    async def async_step_cloud_credentials(
+    async def async_step_cloud_settings(
         self, user_input: dict | None = None
     ) -> FlowResult:
-        """Handle GoodWe cloud credentials when relay is enabled."""
+        """Handle cloud relay settings (host/port) when relay is enabled."""
         if user_input is not None:
             self._server_data.update(
                 {
-                    CONF_CLOUD_USERNAME: user_input[CONF_CLOUD_USERNAME],
-                    CONF_CLOUD_PASSWORD: user_input[CONF_CLOUD_PASSWORD],
                     CONF_CLOUD_HOST: user_input[CONF_CLOUD_HOST],
                     CONF_CLOUD_PORT: int(user_input[CONF_CLOUD_PORT]),
                 }
@@ -110,6 +102,6 @@ class GwhkConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="cloud_credentials",
-            data_schema=STEP_CLOUD_CREDENTIALS_SCHEMA,
+            step_id="cloud_settings",
+            data_schema=STEP_CLOUD_SETTINGS_SCHEMA,
         )
