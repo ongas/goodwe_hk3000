@@ -15,14 +15,45 @@
           "cloud_relay": "Forwards raw POSTGW packets to GoodWe cloud every 60 seconds"
         }
       },
-      "cloud_credentials": {
-        "title": "GoodWe Cloud Credentials",
-        "description": "Enter your GoodWe SEMS account credentials to allow relaying meter data to the cloud.",
+      "cloud_settings": {
+        "title": "GoodWe Cloud Settings",
+        "description": "Configure the GoodWe cloud relay destination.",
         "data": {
-          "cloud_username": "GoodWe Account Email",
-          "cloud_password": "GoodWe Account Password",
-          "cloud_host": "GoodWe Cloud Host",
-          "cloud_port": "GoodWe Cloud Port"
+          "cloud_host": "Cloud Host",
+          "cloud_port": "Cloud Port"
+        },
+        "data_description": {
+          "cloud_host": "Default: tcp.goodwe-power.com",
+          "cloud_port": "Default: 20001"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HK3000 Settings",
+        "data": {
+          "meter_host": "Meter IP Address",
+          "meter_port": "Meter Port",
+          "cloud_relay": "Relay data to GoodWe cloud (keep SEMS app working)"
+        },
+        "data_description": {
+          "meter_host": "Example: 192.168.0.200",
+          "meter_port": "Default: 20001",
+          "cloud_relay": "Forwards raw POSTGW packets to GoodWe cloud every 60 seconds"
+        }
+      },
+      "cloud_settings": {
+        "title": "GoodWe Cloud Settings",
+        "description": "Configure the GoodWe cloud relay destination.",
+        "data": {
+          "cloud_host": "Cloud Host",
+          "cloud_port": "Cloud Port"
+        },
+        "data_description": {
+          "cloud_host": "Default: tcp.goodwe-power.com",
+          "cloud_port": "Default: 20001"
         }
       }
     }
