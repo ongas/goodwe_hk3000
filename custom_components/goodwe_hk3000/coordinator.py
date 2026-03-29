@@ -26,6 +26,8 @@ class GwhkDataManager:
         self.last_packet_time: datetime | None = None
         self.packet_count_today: int = 0
         self._packet_count_date: str = ""
+        self.relay_count_today: int = 0
+        self._relay_count_date: str = ""
         self.connected: bool = False
 
     @property
@@ -56,6 +58,16 @@ class GwhkDataManager:
     def set_connected(self, connected: bool) -> None:
         """Update connection state and notify listeners."""
         self.connected = connected
+        for callback in list(self._listeners):
+            callback()
+
+    def record_relay(self) -> None:
+        """Increment the daily successful cloud relay counter and notify listeners."""
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if today != self._relay_count_date:
+            self.relay_count_today = 0
+            self._relay_count_date = today
+        self.relay_count_today += 1
         for callback in list(self._listeners):
             callback()
 
@@ -311,6 +323,7 @@ class GwhkTcpClient:
             relay_writer.write(pkt)
             await relay_writer.drain()
             self._last_relay_time = time.monotonic()
+            self._manager.record_relay()
             _LOGGER.debug(
                 "Cloud relay: forwarded %d bytes to %s:%d",
                 len(pkt),

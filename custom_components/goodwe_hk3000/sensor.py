@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_CLOUD_RELAY, DOMAIN
 from .coordinator import GwhkDataManager
 
 
@@ -75,12 +75,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up HK3000 sensors from a config entry."""
     manager: GwhkDataManager = hass.data[DOMAIN][entry.entry_id]
+    cfg = {**entry.data, **entry.options}
     meter_sensors = [GwhkSensor(manager, description, entry) for description in SENSORS]
-    status_sensors = [
+    status_sensors: list[SensorEntity] = [
         GwhkConnectionStatusSensor(manager, entry),
         GwhkLastUpdateSensor(manager, entry),
         GwhkPacketCountSensor(manager, entry),
     ]
+    if cfg.get(CONF_CLOUD_RELAY, False):
+        status_sensors.append(GwhkRelayCountSensor(manager, entry))
     async_add_entities(meter_sensors + status_sensors)
 
 
@@ -211,6 +214,38 @@ class GwhkPacketCountSensor(SensorEntity):
     @property
     def native_value(self) -> int:
         return self._manager.packet_count_today
+
+    @callback
+    def _handle_update(self) -> None:
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        self._manager.register_listener(self._handle_update)
+
+    async def async_will_remove_from_hass(self) -> None:
+        self._manager.unregister_listener(self._handle_update)
+
+
+class GwhkRelayCountSensor(SensorEntity):
+    """Reports the number of packets successfully relayed to GoodWe cloud today.
+
+    Only registered when cloud relay is enabled.
+    """
+
+    _attr_has_entity_name = True
+    _attr_name = "SEMS Syncs Today"
+    _attr_icon = "mdi:cloud-upload"
+    _attr_native_unit_of_measurement = "syncs"
+    _attr_should_poll = False
+
+    def __init__(self, manager: GwhkDataManager, entry: ConfigEntry) -> None:
+        self._manager = manager
+        self._attr_unique_id = f"{entry.entry_id}_relay_count_today"
+        self._attr_device_info = _device_info(entry)
+
+    @property
+    def native_value(self) -> int:
+        return self._manager.relay_count_today
 
     @callback
     def _handle_update(self) -> None:
