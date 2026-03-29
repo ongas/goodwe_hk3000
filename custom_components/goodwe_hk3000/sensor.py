@@ -195,12 +195,12 @@ class GwhkLastUpdateSensor(SensorEntity):
 
 
 class GwhkPacketCountSensor(SensorEntity):
-    """Reports the number of meter packets received today."""
+    """Reports the number of meter readings received today."""
 
     _attr_has_entity_name = True
-    _attr_name = "Packets Today"
+    _attr_name = "Meter Readings Today"
     _attr_icon = "mdi:counter"
-    _attr_native_unit_of_measurement = "packets"
+    _attr_native_unit_of_measurement = "readings"
     _attr_should_poll = False
 
     def __init__(self, manager: GwhkDataManager, entry: ConfigEntry) -> None:
