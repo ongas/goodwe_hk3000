@@ -10,10 +10,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_CLOUD_HOST,
-    CONF_CLOUD_PASSWORD,
     CONF_CLOUD_PORT,
     CONF_CLOUD_RELAY,
-    CONF_CLOUD_USERNAME,
     CONF_METER_HOST,
     CONF_METER_PORT,
     DEFAULT_CLOUD_HOST,
@@ -44,9 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     cloud_relay = entry.data.get(CONF_CLOUD_RELAY, False)
     cloud_host = entry.data.get(CONF_CLOUD_HOST, DEFAULT_CLOUD_HOST)
     cloud_port = entry.data.get(CONF_CLOUD_PORT, DEFAULT_CLOUD_PORT)
-    cloud_username = entry.data.get(CONF_CLOUD_USERNAME, "")
-    cloud_password = entry.data.get(CONF_CLOUD_PASSWORD, "")
-
     _LOGGER.info(
         "HK3000 server-mode: meter=%s:%d  cloud_relay=%s",
         meter_host,
@@ -61,8 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cloud_relay=cloud_relay,
         cloud_host=cloud_host,
         cloud_port=cloud_port,
-        cloud_username=cloud_username,
-        cloud_password=cloud_password,
     )
 
     try:

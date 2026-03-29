@@ -18,17 +18,13 @@ class TestConfigFlow(unittest.TestCase):
         self.flow.hass = MagicMock()
 
     def test_config_flow_imports(self):
-        """Test that all required constants are importable.
-        
-        This would catch issues like missing CONF_UPDATE_INTERVAL.
-        """
-        # Try to import the module which loads all dependencies
+        """Test that all required constants are importable."""
         from custom_components.goodwe_hk3000 import config_flow as cf
 
-        # Verify the class exists and is properly defined
         self.assertTrue(hasattr(cf, "GwhkConfigFlow"))
         self.assertTrue(hasattr(cf, "STEP_SERVER_SCHEMA"))
-        self.assertTrue(hasattr(cf, "STEP_CLOUD_CREDENTIALS_SCHEMA"))
+        self.assertTrue(hasattr(cf, "STEP_CLOUD_SETTINGS_SCHEMA"))
+        self.assertFalse(hasattr(cf, "STEP_CLOUD_CREDENTIALS_SCHEMA"), "credentials schema should be removed")
 
     def test_step_server_schema_fields(self):
         """Test that STEP_SERVER_SCHEMA has the correct fields."""
@@ -45,20 +41,19 @@ class TestConfigFlow(unittest.TestCase):
             required_fields, expected, "Schema should have correct fields"
         )
 
-    def test_step_cloud_credentials_schema_fields(self):
-        """Test that STEP_CLOUD_CREDENTIALS_SCHEMA has the correct fields."""
+    def test_step_cloud_settings_schema_fields(self):
+        """Test that STEP_CLOUD_SETTINGS_SCHEMA has the correct fields (no credentials)."""
         from custom_components.goodwe_hk3000.config_flow import (
-            STEP_CLOUD_CREDENTIALS_SCHEMA,
+            STEP_CLOUD_SETTINGS_SCHEMA,
         )
 
-        # Get the schema keys
         required_fields = set()
-        for key in STEP_CLOUD_CREDENTIALS_SCHEMA.schema.keys():
+        for key in STEP_CLOUD_SETTINGS_SCHEMA.schema.keys():
             required_fields.add(key.schema)
 
-        expected = {"cloud_username", "cloud_password", "cloud_host", "cloud_port"}
+        expected = {"cloud_host", "cloud_port"}
         self.assertEqual(
-            required_fields, expected, "Cloud schema should have correct fields"
+            required_fields, expected, "Cloud schema should only have host and port — no credentials"
         )
 
     def test_config_flow_initialization(self):
@@ -92,8 +87,8 @@ class TestConfigFlow(unittest.TestCase):
         self.assertFalse(self.flow._server_data["cloud_relay"])
 
     async def test_async_step_server_with_relay(self):
-        """Test server step with cloud relay enabled."""
-        self.flow.async_step_cloud_credentials = AsyncMock(
+        """Test server step with cloud relay enabled advances to cloud_settings."""
+        self.flow.async_step_cloud_settings = AsyncMock(
             return_value={"type": "form"}
         )
 
@@ -105,10 +100,10 @@ class TestConfigFlow(unittest.TestCase):
 
         result = await self.flow.async_step_server(user_input)
 
-        self.flow.async_step_cloud_credentials.assert_called_once()
+        self.flow.async_step_cloud_settings.assert_called_once()
 
-    async def test_async_step_cloud_credentials(self):
-        """Test cloud credentials step."""
+    async def test_async_step_cloud_settings(self):
+        """Test cloud settings step stores host/port and creates entry."""
         self.flow._server_data = {
             "meter_host": "192.168.1.100",
             "meter_port": 20001,
@@ -117,18 +112,18 @@ class TestConfigFlow(unittest.TestCase):
         self.flow.async_create_entry = MagicMock(return_value={"type": "create_entry"})
 
         user_input = {
-            "cloud_username": "user@example.com",
-            "cloud_password": "password",
             "cloud_host": "tcp.goodwe-power.com",
             "cloud_port": 20001,
         }
 
-        result = await self.flow.async_step_cloud_credentials(user_input)
+        result = await self.flow.async_step_cloud_settings(user_input)
 
         self.flow.async_create_entry.assert_called_once()
         self.assertEqual(
-            self.flow._server_data["cloud_username"], "user@example.com"
+            self.flow._server_data["cloud_host"], "tcp.goodwe-power.com"
         )
+        self.assertNotIn("cloud_username", self.flow._server_data)
+        self.assertNotIn("cloud_password", self.flow._server_data)
 
 
 if __name__ == "__main__":

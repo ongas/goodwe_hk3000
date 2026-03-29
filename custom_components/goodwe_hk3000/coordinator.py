@@ -140,8 +140,6 @@ class GwhkTcpClient:
         cloud_relay: bool = False,
         cloud_host: str = "",
         cloud_port: int = 20001,
-        cloud_username: str = "",
-        cloud_password: str = "",
     ) -> None:
         self._manager = manager
         self._meter_host = meter_host
@@ -149,8 +147,6 @@ class GwhkTcpClient:
         self._cloud_relay = cloud_relay
         self._cloud_host = cloud_host
         self._cloud_port = cloud_port
-        self._cloud_username = cloud_username
-        self._cloud_password = cloud_password
         self._running = False
         self._last_relay_time: float = 0.0
 

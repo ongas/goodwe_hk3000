@@ -5,8 +5,6 @@ DOMAIN = "goodwe_hk3000"
 CONF_METER_HOST = "meter_host"
 CONF_METER_PORT = "meter_port"
 CONF_CLOUD_RELAY = "cloud_relay"
-CONF_CLOUD_USERNAME = "cloud_username"
-CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_HOST = "cloud_host"
 CONF_CLOUD_PORT = "cloud_port"
 
