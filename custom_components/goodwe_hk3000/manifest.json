@@ -1,7 +1,7 @@
 {
   "domain": "goodwe_hk3000",
   "name": "GoodWe HK3000 Smart Meter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "codeowners": ["@ongas"],
   "config_flow": true,
   "documentation": "https://github.com/ongas/goodwe_hk3000/blob/main/README.md",
