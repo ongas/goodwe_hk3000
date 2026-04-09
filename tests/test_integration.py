@@ -30,8 +30,6 @@ class TestIntegrationSetup(unittest.TestCase):
             "CONF_METER_HOST",
             "CONF_METER_PORT",
             "CONF_CLOUD_RELAY",
-            "CONF_CLOUD_USERNAME",
-            "CONF_CLOUD_PASSWORD",
             "CONF_CLOUD_HOST",
             "CONF_CLOUD_PORT",
             "DEFAULT_CLOUD_HOST",
@@ -90,6 +88,7 @@ class TestIntegrationSetup(unittest.TestCase):
 
         entry = MagicMock()
         entry.entry_id = "test_entry"
+        entry.options = {}
         entry.data = {}  # Missing meter_host
 
         result = await init_module.async_setup_entry(hass, entry)
@@ -106,11 +105,13 @@ class TestIntegrationSetup(unittest.TestCase):
 
         entry = MagicMock()
         entry.entry_id = "test_entry"
+        entry.options = {}
         entry.data = {
             "meter_host": "192.168.1.100",
             "meter_port": 20001,
             "cloud_relay": False,
         }
+        entry.async_on_unload = MagicMock()
 
         with patch("goodwe_hk3000.GwhkTcpClient") as mock_client_class:
             mock_client = AsyncMock()

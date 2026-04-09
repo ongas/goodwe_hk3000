@@ -85,5 +85,66 @@ class TestDataManager(unittest.TestCase):
         )
 
 
+class TestDataManagerStatus(unittest.TestCase):
+    """Test GwhkDataManager status tracking fields."""
+
+    def test_initial_state(self):
+        """Fields should have safe defaults before any data arrives."""
+        manager = GwhkDataManager()
+        self.assertIsNone(manager.last_packet_time)
+        self.assertEqual(manager.packet_count_today, 0)
+        self.assertEqual(manager.relay_count_today, 0)
+        self.assertFalse(manager.connected)
+
+    def test_update_sets_last_packet_time(self):
+        """update() should set last_packet_time to a UTC datetime."""
+        from datetime import timezone
+        manager = GwhkDataManager()
+        manager.update({"power_export_w": 100})
+        self.assertIsNotNone(manager.last_packet_time)
+        self.assertEqual(manager.last_packet_time.tzinfo, timezone.utc)
+
+    def test_update_increments_packet_count(self):
+        """update() should increment packet_count_today."""
+        manager = GwhkDataManager()
+        manager.update({"power_export_w": 100})
+        manager.update({"power_export_w": 200})
+        self.assertEqual(manager.packet_count_today, 2)
+
+    def test_set_connected_true(self):
+        """set_connected(True) should set connected and notify listeners."""
+        manager = GwhkDataManager()
+        calls = []
+        manager.register_listener(lambda: calls.append(1))
+        manager.set_connected(True)
+        self.assertTrue(manager.connected)
+        self.assertEqual(len(calls), 1)
+
+    def test_set_connected_false(self):
+        """set_connected(False) should clear connected and notify listeners."""
+        manager = GwhkDataManager()
+        manager.connected = True
+        calls = []
+        manager.register_listener(lambda: calls.append(1))
+        manager.set_connected(False)
+        self.assertFalse(manager.connected)
+        self.assertEqual(len(calls), 1)
+
+    def test_record_relay_increments_count(self):
+        """record_relay() should increment relay_count_today."""
+        manager = GwhkDataManager()
+        manager.record_relay()
+        manager.record_relay()
+        self.assertEqual(manager.relay_count_today, 2)
+
+    def test_record_relay_notifies_listeners(self):
+        """record_relay() should notify registered listeners."""
+        manager = GwhkDataManager()
+        calls = []
+        manager.register_listener(lambda: calls.append(1))
+        manager.record_relay()
+        self.assertEqual(len(calls), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
