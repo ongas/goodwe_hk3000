@@ -107,7 +107,7 @@ class TestIntegrationSetup(unittest.TestCase):
         entry.entry_id = "test_entry"
         entry.options = {}
         entry.data = {
-            "meter_host": "192.168.1.100",
+            "meter_host": "192.168.1.1",
             "meter_port": 20001,
             "cloud_relay": False,
         }

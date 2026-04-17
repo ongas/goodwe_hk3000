@@ -75,7 +75,7 @@ class TestConfigFlow(unittest.TestCase):
         self.flow.async_create_entry = MagicMock(return_value={"type": "create_entry"})
 
         user_input = {
-            "meter_host": "192.168.1.100",
+            "meter_host": "192.168.1.1",
             "meter_port": 20001,
             "cloud_relay": False,
         }
@@ -83,7 +83,7 @@ class TestConfigFlow(unittest.TestCase):
         result = await self.flow.async_step_server(user_input)
 
         self.flow.async_create_entry.assert_called_once()
-        self.assertEqual(self.flow._server_data["meter_host"], "192.168.1.100")
+        self.assertEqual(self.flow._server_data["meter_host"], "192.168.1.1")
         self.assertFalse(self.flow._server_data["cloud_relay"])
 
     async def test_async_step_server_with_relay(self):
@@ -93,7 +93,7 @@ class TestConfigFlow(unittest.TestCase):
         )
 
         user_input = {
-            "meter_host": "192.168.1.100",
+            "meter_host": "192.168.1.1",
             "meter_port": 20001,
             "cloud_relay": True,
         }
@@ -105,7 +105,7 @@ class TestConfigFlow(unittest.TestCase):
     async def test_async_step_cloud_settings(self):
         """Test cloud settings step stores host/port and creates entry."""
         self.flow._server_data = {
-            "meter_host": "192.168.1.100",
+            "meter_host": "192.168.1.1",
             "meter_port": 20001,
             "cloud_relay": True,
         }
